@@ -1,0 +1,64 @@
+import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+import * as render from './render.js';
+
+// 初始的貼文資料
+const posts = [
+  { id: 0, title: 'aaa', body: 'aaaaa', created_at: new Date().toLocaleString() },
+  { id: 1, title: 'bbb', body: 'bbbbb', created_at: new Date().toLocaleString() },
+];
+
+const router = new Router();
+
+router
+  .get('/', list)          // 列出所有貼文
+  .get('/post/new', add)   // 新增貼文表單頁面
+  .get('/post/:id', show)  // 顯示單一貼文
+  .post('/post', create);  // 處理新增貼文
+
+const app = new Application();
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+// 列出貼文
+async function list(ctx) {
+  ctx.response.body = await render.list(posts);
+}
+
+// 顯示新增貼文表單
+async function add(ctx) {
+  ctx.response.body = await render.newPost();
+}
+
+// 顯示單一貼文
+async function show(ctx) {
+  const id = Number(ctx.params.id); // 確保 ID 是數字
+  const post = posts[id];
+  if (!post) ctx.throw(404, 'Invalid post ID');
+  ctx.response.body = await render.show(post);
+}
+
+// 處理新增貼文
+async function create(ctx) {
+  const body = ctx.request.body();
+  if (body.type === "form") {
+    const pairs = await body.value; // 獲取表單資料
+    const post = {};
+    for (const [key, value] of pairs) {
+      post[key] = value;
+    }
+
+    // 設定貼文的 ID 與建立時間
+    post.id = posts.length;
+    post.created_at = new Date().toLocaleString(); // 取得當下時間
+
+    // 儲存貼文
+    posts.push(post);
+
+    // 重新導向回主頁
+    ctx.response.redirect('/');
+    console.log('New post added:', post);
+  }
+}
+
+console.log('Server running at http://127.0.0.1:8000');
+await app.listen({ port: 8000 });
