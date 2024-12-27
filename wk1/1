@@ -1,0 +1,19 @@
+import { Application, Router } from "https://deno.land/x/oak/mod.ts";
+
+const app = new Application();
+const router = new Router();
+
+router.get("/", (context) => {
+  context.response.body = {
+    name: "羅德耕",
+    age: 22,
+    gender: "男",
+    introduction: "你好！我是羅德耕，今年22歲，喜歡探索新事物和挑戰自己。",
+  };
+});
+
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+console.log("伺服器正在 http://localhost:8000 運行...");
+await app.listen({ port: 8000 });
