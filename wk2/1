@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog with Timestamps</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .post {
+      border: 1px solid #ddd;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .post h2 {
+      margin: 0 0 10px;
+    }
+    .post small {
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Blog with Timestamps</h1>
+
+  <form id="postForm">
+    <label for="title">Title:</label>
+    <br>
+    <input type="text" id="title" name="title" required>
+    <br><br>
+    <label for="content">Content:</label>
+    <br>
+    <textarea id="content" name="content" rows="5" required></textarea>
+    <br><br>
+    <button type="submit">Submit Post</button>
+  </form>
+
+  <h2>Posts</h2>
+  <div id="posts">
+    <!-- Posts will be dynamically loaded here -->
+  </div>
+
+  <script>
+    const form = document.getElementById("postForm");
+    const postsContainer = document.getElementById("posts");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("title").value;
+      const content = document.getElementById("content").value;
+
+      const response = await fetch("/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, content }),
+      });
+
+      if (response.ok) {
+        document.getElementById("title").value = "";
+        document.getElementById("content").value = "";
+        fetchPosts(); // Refresh the posts list
+      } else {
+        alert("Failed to submit post.");
+      }
+    });
+
+    async function fetchPosts() {
+      const response = await fetch("/posts");
+      if (!response.ok) {
+        postsContainer.innerHTML = "<p>Failed to load posts.</p>";
+        return;
+      }
+      const posts = await response.json();
+      postsContainer.innerHTML = posts
+        .map(
+          (post) => `
+          <div class="post">
+            <h2>${post.title}</h2>
+            <p>${post.content}</p>
+            <small>Posted on: ${new Date(post.timestamp).toLocaleString()}</small>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    // Load posts on page load
+    fetchPosts();
+  </script>
+</body>
+</html>
