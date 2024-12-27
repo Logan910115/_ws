@@ -3,21 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blog with Timestamps</title>
+  <title>Posts</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
     }
+    h1 {
+      font-size: 2rem;
+      color: #333;
+    }
     .post {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
     }
     .post h2 {
-      margin: 0 0 10px;
+      font-size: 1.5rem;
+      margin: 0;
+    }
+    .post a {
+      color: purple;
+      text-decoration: none;
+    }
+    .post a:hover {
+      text-decoration: underline;
     }
     .post small {
       color: #555;
@@ -25,63 +34,39 @@
   </style>
 </head>
 <body>
-  <h1>Blog with Timestamps</h1>
-
-  <form id="postForm">
-    <label for="title">Title:</label>
-    <br>
-    <input type="text" id="title" name="title" required>
-    <br><br>
-    <label for="content">Content:</label>
-    <br>
-    <textarea id="content" name="content" rows="5" required></textarea>
-    <br><br>
-    <button type="submit">Submit Post</button>
-  </form>
-
-  <h2>Posts</h2>
+  <h1>Posts</h1>
+  <p>You have <span id="postCount">0</span> posts!</p>
+  <a href="/create" id="createLink">Create a Post</a>
+  
   <div id="posts">
     <!-- Posts will be dynamically loaded here -->
   </div>
 
   <script>
-    const form = document.getElementById("postForm");
-    const postsContainer = document.getElementById("posts");
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const title = document.getElementById("title").value;
-      const content = document.getElementById("content").value;
-
-      const response = await fetch("/posts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content }),
-      });
-
-      if (response.ok) {
-        document.getElementById("title").value = "";
-        document.getElementById("content").value = "";
-        fetchPosts(); // Refresh the posts list
-      } else {
-        alert("Failed to submit post.");
-      }
-    });
-
     async function fetchPosts() {
       const response = await fetch("/posts");
-      if (!response.ok) {
-        postsContainer.innerHTML = "<p>Failed to load posts.</p>";
-        return;
-      }
       const posts = await response.json();
+
+      const postsContainer = document.getElementById("posts");
+      const postCount = document.getElementById("postCount");
+
+      postCount.textContent = posts.length; // 更新貼文數量
+
       postsContainer.innerHTML = posts
         .map(
           (post) => `
           <div class="post">
             <h2>${post.title}</h2>
-            <p>${post.content}</p>
-            <small>Posted on: ${new Date(post.timestamp).toLocaleString()}</small>
+            <a href="/post/${post.id}">Read post</a>
+            <br>
+            <small>Created at: ${new Date(post.timestamp).toLocaleString("zh-TW", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            })}</small>
           </div>
         `
         )
